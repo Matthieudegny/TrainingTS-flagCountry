@@ -1,6 +1,6 @@
 "use strict";
 fetch("https://restcountries.com/v3.1/all").then(function (response) {
-    var contentType = response.headers.get("content-type");
+    let contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json().then(function (datas) {
             startApplication(datas);
@@ -13,18 +13,53 @@ fetch("https://restcountries.com/v3.1/all").then(function (response) {
 });
 let listePays = [];
 let randomPays;
-function startApplication(datas) {
+const melangeTableau = (tab) => {
+    let randomTab = tab;
+    for (var i = randomTab.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1)); //random index
+        [randomTab[i], randomTab[j]] = [randomTab[j], randomTab[i]]; // swap
+    }
+    return randomTab;
+};
+const debuterJeu = () => {
+    randomPays = getRandomPays(listePays);
+    document.querySelector("#drapeau").innerHTML = `<img src="${randomPays.drapeau}" width="250px" class="border border-dark" alt="${randomPays.nom}"/>`;
+    const bonneReponse = randomPays.nom;
+    const mauvaiseReponse1 = getRandomPays(listePays).nom;
+    const mauvaiseReponse2 = getRandomPays(listePays).nom;
+    const mauvaiseReponse3 = getRandomPays(listePays).nom;
+    let lesReponse = [bonneReponse, mauvaiseReponse1, mauvaiseReponse2, mauvaiseReponse3];
+    lesReponse = melangeTableau(lesReponse);
+    document.querySelector("#boutons").innerHTML = genererBoutonsReponse(lesReponse);
+};
+const genererBoutonsReponse = (tab) => {
+    let boutonsHTML = "";
+    for (let nom of tab) {
+        boutonsHTML += `<button class="btn btn-primary me-1 mt-1" onClick="verificationReponse('${nom}')">${nom}</button>`;
+    }
+    return boutonsHTML;
+};
+const verificationReponse = (reponse) => {
+    const divResultat = document.querySelector("#resultat");
+    if (reponse === randomPays.nom) {
+        divResultat.innerHTML = `<div class="alert alert-success">${reponse} est la bonne réponse</div>`;
+    }
+    else {
+        divResultat.innerHTML = `<div class="alert alert-danger">${reponse} est une mauvaise réponse</div>`;
+    }
+    divResultat.innerHTML += "<button class='btn btn-warning' onClick='debuterJeu()'>Changer de pays</button>";
+};
+const getRandomPays = (listePays) => {
+    let random = Math.floor(Math.random() * listePays.length);
+    return listePays[random];
+};
+const startApplication = (datas) => {
     for (let unPays of datas) {
         const pays = {
-            nom: unPays.translations.fr,
-            drapeau: unPays.flag,
+            nom: unPays.name.common,
+            drapeau: unPays.flags.png,
         };
         listePays.push(pays);
     }
-    randomPays = getRandomPays(listePays);
-    document.querySelector("#drapeau").innerHTML = `<img src="${randomPays.drapeau}" width="250px" class="border border-dark" alt="${randomPays.nom}"/>`;
-}
-function getRandomPays(listePays) {
-    let random = Math.floor(Math.random() * listePays.length);
-    return listePays[random];
-}
+    debuterJeu();
+};
